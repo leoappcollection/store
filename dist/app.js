@@ -179,7 +179,8 @@
               '<a class="buy big" href="' + esc(d.buy_url) +
               '" target="_blank" rel="noopener">Buy 🛒</a></div>') +
           '<div class="note">Tapping Buy opens our Telegram bot. ' +
-          "Pay with USDT or TON (more coins coming soon) and receive your files right in the chat.</div></div>";
+          "We accept crypto payments only — pay with USDT, USDC, USDe, USD1, BNB, ETH or TON " +
+          "and receive your files right in the chat.</div></div>";
         window.scrollTo(0, 0);
       })
       .catch(function () {

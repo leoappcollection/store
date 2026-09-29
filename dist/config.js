@@ -1,2 +1,2 @@
 const PRICE_USD = 1;
-const BOT_USERNAME = "CRYPTO_BOT_USERNAME";
+const BOT_USERNAME = "leoappcollection_bot";
