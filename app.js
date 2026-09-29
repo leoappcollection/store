@@ -98,16 +98,14 @@
     return '<span class="' + (cls || "thumb") + ' fallback">💿</span>';
   }
 
-  function goDetail(pid) { location.hash = "#/p/" + pid; }
-
   function cardHtml(p) {
     var linkUrl = "https://t.me/" + BOT_USERNAME + "?start=" +
       (p.free ? "free_" : "buy_") + p.id;
     var btn = p.free
-      ? '<a class="buy free" onclick="event.stopPropagation()" href="' + linkUrl + '" target="_blank" rel="noopener">🆓 Get it free</a>'
-      : '<a class="buy" onclick="event.stopPropagation()" href="' + linkUrl + '" target="_blank" rel="noopener">Buy 🛒</a>';
+      ? '<a class="buy free" href="' + linkUrl + '" target="_blank" rel="noopener">🆓 Get it free</a>'
+      : '<a class="buy" href="' + linkUrl + '" target="_blank" rel="noopener">Buy 🛒</a>';
     var teaser = p.d ? '<div class="teaser">' + esc(p.d) + "</div>" : "";
-    return '<div class="card" onclick="goDetail(\'' + p.id + '\')">' +
+    return '<div class="card" data-pid="' + p.id + '">' +
       '<div class="chead">' + thumbHtml(p) +
       "<h3>" + esc(p.n) + '</h3><span class="chev">›</span></div>' +
       teaser +
@@ -133,6 +131,13 @@
       }
     }
     view.innerHTML = html;
+    view.onclick = function (e) {
+      if (e.target.closest(".buy")) return; // Buy button -> Telegram, not detail
+      var card = e.target.closest(".card");
+      if (card && card.getAttribute("data-pid")) {
+        location.hash = "#/p/" + card.getAttribute("data-pid");
+      }
+    };
     var more = document.getElementById("moreBtn");
     if (more) more.onclick = function () {
       state.shown = Math.min(state.shown + PAGE, list.length);
