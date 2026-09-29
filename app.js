@@ -147,11 +147,12 @@
           return "<li><span>" + esc(f.n) + '</span><span class="fs">' +
             esc(fmtSize(f.s)) + "</span></li>";
         }).join("");
-        var icon = "";
+        var icon = "", desc = "";
         if (DATA) {
           for (var i = 0; i < DATA.products.length; i++) {
             if (DATA.products[i].id === pid) {
               icon = thumbHtml(DATA.products[i], "thumb big");
+              if (DATA.products[i].d) desc = DATA.products[i].d;
               break;
             }
           }
@@ -167,6 +168,7 @@
           '<a class="back" href="#/">← Back</a>' +
           '<div class="detail"><div class="chead">' + icon +
           "<h2>" + esc(d.name) + "</h2></div>" +
+          (desc ? '<p class="desc">' + esc(desc) + "</p>" : "") +
           '<div class="dbox">' + d.count + " files · total <b>" +
           esc(fmtSize(d.size)) + "</b></div>" +
           '<ul class="flist">' + rows + "</ul>" +
