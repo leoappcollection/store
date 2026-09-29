@@ -106,9 +106,11 @@
     var btn = p.free
       ? '<a class="buy free" onclick="event.stopPropagation()" href="' + linkUrl + '" target="_blank" rel="noopener">🆓 Get it free</a>'
       : '<a class="buy" onclick="event.stopPropagation()" href="' + linkUrl + '" target="_blank" rel="noopener">Buy 🛒</a>';
+    var teaser = p.d ? '<div class="teaser">' + esc(p.d) + "</div>" : "";
     return '<div class="card" onclick="goDetail(\'' + p.id + '\')">' +
       '<div class="chead">' + thumbHtml(p) +
-      "<h3>" + esc(p.n) + "</h3></div>" +
+      "<h3>" + esc(p.n) + '</h3><span class="chev">›</span></div>' +
+      teaser +
       '<div class="cmeta">' + p.c + " files · " + esc(fmtSize(p.s)) + "</div>" +
       '<div class="crow"><span class="price">' + fmtPrice(p) + "</span>" +
       btn + "</div>" +
