@@ -98,15 +98,17 @@
     return '<span class="' + (cls || "thumb") + ' fallback">💿</span>';
   }
 
+  function goDetail(pid) { location.hash = "#/p/" + pid; }
+
   function cardHtml(p) {
     var linkUrl = "https://t.me/" + BOT_USERNAME + "?start=" +
       (p.free ? "free_" : "buy_") + p.id;
     var btn = p.free
-      ? '<a class="buy free" href="' + linkUrl + '" target="_blank" rel="noopener">🆓 Get it free</a>'
-      : '<a class="buy" href="' + linkUrl + '" target="_blank" rel="noopener">Buy 🛒</a>';
-    return '<div class="card">' +
+      ? '<a class="buy free" onclick="event.stopPropagation()" href="' + linkUrl + '" target="_blank" rel="noopener">🆓 Get it free</a>'
+      : '<a class="buy" onclick="event.stopPropagation()" href="' + linkUrl + '" target="_blank" rel="noopener">Buy 🛒</a>';
+    return '<div class="card" onclick="goDetail(\'' + p.id + '\')">' +
       '<div class="chead">' + thumbHtml(p) +
-      '<h3><a href="#/p/' + p.id + '">' + esc(p.n) + "</a></h3></div>" +
+      "<h3>" + esc(p.n) + "</h3></div>" +
       '<div class="cmeta">' + p.c + " files · " + esc(fmtSize(p.s)) + "</div>" +
       '<div class="crow"><span class="price">' + fmtPrice(p) + "</span>" +
       btn + "</div>" +
