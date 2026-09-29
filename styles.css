@@ -94,6 +94,16 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 14px 30px rgba(0,0,0,.22);
 }
 .card:active { transform: translateY(-1px) scale(1); }
+.chev {
+  color: var(--muted); font-size: 22px; line-height: 1;
+  flex: 0 0 auto; align-self: center; opacity: .7;
+}
+.card:hover .chev { color: var(--acc); opacity: 1; }
+.teaser {
+  color: var(--muted); font-size: 13px; line-height: 1.45;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .chead { display: flex; gap: 10px; align-items: flex-start; }
 .chead h3 { flex: 1; min-width: 0; }
 .thumb {
