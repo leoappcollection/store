@@ -98,19 +98,20 @@
     return '<span class="' + (cls || "thumb") + ' fallback">💿</span>';
   }
 
+  function goDetail(pid) { location.hash = "#/p/" + pid; }
+
   function cardHtml(p) {
     var linkUrl = "https://t.me/" + BOT_USERNAME + "?start=" +
       (p.free ? "free_" : "buy_") + p.id;
     var btn = p.free
-      ? '<a class="buy free" href="' + linkUrl + '" target="_blank" rel="noopener">🆓 Get it free</a>'
-      : '<a class="buy" href="' + linkUrl + '" target="_blank" rel="noopener">Buy 🛒</a>';
-    return '<div class="card">' +
+      ? '<a class="buy free" onclick="event.stopPropagation()" href="' + linkUrl + '" target="_blank" rel="noopener">🆓 Get it free</a>'
+      : '<a class="buy" onclick="event.stopPropagation()" href="' + linkUrl + '" target="_blank" rel="noopener">Buy 🛒</a>';
+    return '<div class="card" onclick="goDetail(\'' + p.id + '\')">' +
       '<div class="chead">' + thumbHtml(p) +
-      '<h3><a href="#/p/' + p.id + '">' + esc(p.n) + "</a></h3></div>" +
+      "<h3>" + esc(p.n) + "</h3></div>" +
       '<div class="cmeta">' + p.c + " files · " + esc(fmtSize(p.s)) + "</div>" +
       '<div class="crow"><span class="price">' + fmtPrice(p) + "</span>" +
       btn + "</div>" +
-      (p.free ? "" : '<div class="cnote">We accept crypto payments only.</div>') +
       "</div>";
   }
 
@@ -147,12 +148,11 @@
           return "<li><span>" + esc(f.n) + '</span><span class="fs">' +
             esc(fmtSize(f.s)) + "</span></li>";
         }).join("");
-        var icon = "", desc = "";
+        var icon = "";
         if (DATA) {
           for (var i = 0; i < DATA.products.length; i++) {
             if (DATA.products[i].id === pid) {
               icon = thumbHtml(DATA.products[i], "thumb big");
-              if (DATA.products[i].d) desc = DATA.products[i].d;
               break;
             }
           }
@@ -168,7 +168,6 @@
           '<a class="back" href="#/">← Back</a>' +
           '<div class="detail"><div class="chead">' + icon +
           "<h2>" + esc(d.name) + "</h2></div>" +
-          (desc ? '<p class="desc">' + esc(desc) + "</p>" : "") +
           '<div class="dbox">' + d.count + " files · total <b>" +
           esc(fmtSize(d.size)) + "</b></div>" +
           '<ul class="flist">' + rows + "</ul>" +
@@ -182,8 +181,8 @@
               '<a class="buy big" href="' + esc(d.buy_url) +
               '" target="_blank" rel="noopener">Buy 🛒</a></div>') +
           '<div class="note">Tapping Buy opens our Telegram bot. ' +
-          "We accept crypto payments only — pay with USDT, USDC, USDe, USD1, " +
-          "BNB, ETH or TON and receive your files right in the chat.</div></div>";
+          "We accept crypto payments only — pay with USDT, USDC, USDe, USD1, BNB, ETH or TON " +
+          "and receive your files right in the chat.</div></div>";
         window.scrollTo(0, 0);
       })
       .catch(function () {
