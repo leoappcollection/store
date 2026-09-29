@@ -12,6 +12,7 @@ Covers must be copied separately from the main store's dist/data/covers/.
 """
 import os
 import sys
+import json
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MAIN_TOOLS = os.path.normpath(os.path.join(
@@ -27,8 +28,14 @@ ec.PRICE_PREMIUM = 1
 ec.price_of = lambda name: 1  # noqa: E731
 # placeholder — replaced with the real crypto-bot username once created
 ec.BOT_USERNAME = "CRYPTO_BOT_USERNAME"
-# skip Burmese-language content (descriptions, requirements)
-ec.DESCRIPTIONS = {}
+# English descriptions for the crypto store (translated from Burmese)
+_en_desc_path = os.path.join(HERE, "descriptions_en.json")
+if os.path.exists(_en_desc_path):
+    with open(_en_desc_path, encoding="utf-8") as f:
+        ec.DESCRIPTIONS = json.load(f)
+else:
+    ec.DESCRIPTIONS = {}
+# requirements stay skipped (Burmese-only)
 ec.REQUIREMENTS = {}
 ec.OUT_DIR = OUT_DIR
 
