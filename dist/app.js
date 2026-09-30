@@ -87,13 +87,11 @@
     cls = cls || "thumb";
     if (p.cover) {
       return '<img class="' + cls + ' cover" src="' + esc(p.cover) +
-        '" alt="" loading="lazy" onerror="this.outerHTML=' +
-        "'<span class=\"" + cls + " fallback\">💿</span>'" + '">';
+        '" alt="" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;' + cls + ' fallback&quot;>💿</span>\'">';
     }
     if (p.i) {
       return '<img class="' + (cls || "thumb") + '" src="' + esc(p.i) +
-        '" alt="" loading="lazy" onerror="this.outerHTML=' +
-        "'<span class=\"" + (cls || "thumb") + " fallback\">💿</span>'" + '">';
+        '" alt="" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;' + (cls || "thumb") + ' fallback&quot;>💿</span>\'">';
     }
     return '<span class="' + (cls || "thumb") + ' fallback">💿</span>';
   }
