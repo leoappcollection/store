@@ -185,7 +185,7 @@
               '" target="_blank" rel="noopener">🆓 Download free</a></div>'
             : '<div class="buyrow"><span class="price" style="font-size:18px">$' +
               (d.price || PRICE_USD) + "</span>" +
-              '<a class="buy big" href="' + esc(d.buy_url) +
+              '<a class="buy big" href="https://t.me/' + BOT_USERNAME + "?start=buy_" + d.id +
               '" target="_blank" rel="noopener">Buy 🛒</a></div>') +
           '<div class="note">Tapping Buy opens our Telegram bot. ' +
           "We accept crypto payments only — pay with USDT, USDC, USDe, USD1, BNB, ETH, XRP, TON, BTC or TRX " +
