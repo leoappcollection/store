@@ -38,6 +38,15 @@
     return "other";
   }
 
+  var CAT_COLORS = {
+    all: "#35c5d8", free: "#ffd84d", win: "#4da3ff", adobe: "#ff6b6b",
+    va: "#c586ff", photo: "#ffb84d", util: "#4dd08a", other: "#9db2c4"
+  };
+  function catLabel(key) {
+    for (var i = 0; i < CATS.length; i++) if (CATS[i][0] === key) return CATS[i][1];
+    return key;
+  }
+
   var DATA = null, state = { q: "", cat: "all", shown: 0 };
   var PAGE = 60;
   var view = document.getElementById("view");
@@ -48,6 +57,7 @@
     var b = document.createElement("button");
     b.textContent = c[1];
     b.dataset.cat = c[0];
+    b.style.setProperty("--catc", CAT_COLORS[c[0]]);
     if (i === 0) b.className = "active";
     b.onclick = function () {
       state.cat = c[0]; state.shown = 0;
@@ -103,20 +113,44 @@
       ? '<a class="buy free" href="' + linkUrl + '" target="_blank" rel="noopener">🆓 Get it free</a>'
       : '<a class="buy" href="' + linkUrl + '" target="_blank" rel="noopener">Buy 🛒</a>';
     var teaser = p.d ? '<div class="teaser">' + esc(p.d) + "</div>" : "";
+    var ck = p.free ? "free" : catOf(p.n);
+    var chip = '<span class="catchip" style="background:' + CAT_COLORS[ck] + '">' +
+      esc(catLabel(ck)) + "</span>";
     return '<div class="card" data-pid="' + p.id + '">' +
       '<div class="chead">' + thumbHtml(p) +
       "<h3>" + esc(p.n) + '</h3><span class="chev">›</span></div>' +
       teaser +
-      '<div class="cmeta">' + p.c + " files · " + esc(fmtSize(p.s)) + "</div>" +
+      '<div class="cmeta">' + chip + p.c + " files · " + esc(fmtSize(p.s)) + "</div>" +
       '<div class="crow"><span class="price">' + fmtPrice(p) + "</span>" +
       btn + "</div>" +
       "</div>";
   }
 
+  function heroHtml() {
+    var cands = DATA.products.filter(function (p) { return p.cover; });
+    if (!cands.length) return "";
+    cands.sort(function (a, b) { return (b.pop - a.pop) || (b.s - a.s); });
+    var top = cands.slice(0, 24);
+    var p = top[Math.floor(Date.now() / 86400000) % top.length];
+    var linkUrl = "https://t.me/" + BOT_USERNAME + "?start=" +
+      (p.free ? "free_" : "buy_") + p.id;
+    var btn = p.free
+      ? '<a class="buy free" href="' + linkUrl + '" target="_blank" rel="noopener">🆓 Get it free</a>'
+      : '<a class="buy" href="' + linkUrl + '" target="_blank" rel="noopener">Buy 🛒</a>';
+    var teaser = p.d ? '<div class="hero-d">' + esc(p.d) + "</div>" : "";
+    return '<div class="hero" data-pid="' + p.id + '">' +
+      '<img class="hero-img" src="' + esc(p.cover) + '" alt="" loading="lazy">' +
+      '<div class="hero-body"><div class="hero-tag">⭐ Featured</div>' +
+      "<h2>" + esc(p.n) + "</h2>" + teaser +
+      '<div class="crow"><span class="price">' + fmtPrice(p) + "</span>" + btn + "</div>" +
+      "</div></div>";
+  }
+
   function renderList() {
     var list = filtered();
     state.shown = Math.min(state.shown || PAGE, list.length) || Math.min(PAGE, list.length);
-    var html = '<div class="count">' + list.length + " products found</div>";
+    var html = (state.cat === "all" && !state.q.trim()) ? heroHtml() : "";
+    html += '<div class="count">' + list.length + " products found</div>";
     if (!list.length) {
       html += '<div class="empty">Nothing found 😅<br>Try searching the software name in English.</div>';
     } else {
@@ -131,7 +165,7 @@
     view.innerHTML = html;
     view.onclick = function (e) {
       if (e.target.closest(".buy")) return; // Buy button -> Telegram, not detail
-      var card = e.target.closest(".card");
+      var card = e.target.closest(".card, .hero");
       if (card && card.getAttribute("data-pid")) {
         location.hash = "#/p/" + card.getAttribute("data-pid");
       }
