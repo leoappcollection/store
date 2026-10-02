@@ -235,3 +235,5 @@ a { color: inherit; text-decoration: none; }
   .hero-nav { display: block; }
   .foot { padding-bottom: 60px; }
 }
+
+.dlc { color: #7ee2a8; font-weight: 600; white-space: nowrap; }
