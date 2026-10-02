@@ -173,3 +173,15 @@ a { color: inherit; text-decoration: none; }
   padding: 18px 12px 40px; border-top: 1px solid var(--line);
 }
 .empty { text-align: center; color: var(--muted); padding: 40px 10px; }
+
+/* Desktop layout (>=900px). Mobile view above is untouched;
+   delete this block to revert to the mobile-only design. */
+@media (min-width: 900px) {
+  #view { max-width: 1180px; padding: 20px 24px; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .topbar { padding: 14px 24px; }
+  .searchbar { max-width: 640px; }
+  .detail { max-width: 860px; margin: 0 auto; padding: 24px; }
+  .card { padding: 16px; }
+  .foot { padding-bottom: 60px; }
+}
