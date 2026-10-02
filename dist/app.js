@@ -126,24 +126,75 @@
       "</div>";
   }
 
+  var heroTimer = null;
   function heroHtml() {
     var cands = DATA.products.filter(function (p) { return p.cover; });
     if (!cands.length) return "";
     cands.sort(function (a, b) { return (b.pop - a.pop) || (b.s - a.s); });
-    var top = cands.slice(0, 24);
-    var p = top[Math.floor(Date.now() / 86400000) % top.length];
-    var linkUrl = "https://t.me/" + BOT_USERNAME + "?start=" +
-      (p.free ? "free_" : "buy_") + p.id;
-    var btn = p.free
-      ? '<a class="buy free" href="' + linkUrl + '" target="_blank" rel="noopener">🆓 Get it free</a>'
-      : '<a class="buy" href="' + linkUrl + '" target="_blank" rel="noopener">Buy 🛒</a>';
-    var teaser = p.d ? '<div class="hero-d">' + esc(p.d) + "</div>" : "";
-    return '<div class="hero" data-pid="' + p.id + '">' +
-      '<img class="hero-img" src="' + esc(p.cover) + '" alt="" loading="lazy">' +
-      '<div class="hero-body"><div class="hero-tag">⭐ Featured</div>' +
-      "<h2>" + esc(p.n) + "</h2>" + teaser +
-      '<div class="crow"><span class="price">' + fmtPrice(p) + "</span>" + btn + "</div>" +
-      "</div></div>";
+    var slides = cands.slice(0, 5);
+    function slide(p) {
+      var linkUrl = "https://t.me/" + BOT_USERNAME + "?start=" +
+        (p.free ? "free_" : "buy_") + p.id;
+      var btn = p.free
+        ? '<a class="buy free" href="' + linkUrl + '" target="_blank" rel="noopener">🆓 Get it free</a>'
+        : '<a class="buy" href="' + linkUrl + '" target="_blank" rel="noopener">Buy 🛒</a>';
+      var teaser = p.d ? '<div class="hero-d">' + esc(p.d) + "</div>" : "";
+      return '<div class="hero-slide" data-pid="' + p.id + '">' +
+        '<img class="hero-img" src="' + esc(p.cover) + '" alt="" loading="lazy">' +
+        '<div class="hero-body"><div class="hero-tag">⭐ Featured</div>' +
+        "<h2>" + esc(p.n) + "</h2>" + teaser +
+        '<div class="crow"><span class="price">' + fmtPrice(p) + "</span>" + btn + "</div>" +
+        "</div></div>";
+    }
+    var dots = "";
+    slides.forEach(function (_, i) {
+      dots += '<button class="hero-dot' + (i === 0 ? " on" : "") +
+        '" type="button" data-i="' + i + '" aria-label="slide ' + (i + 1) + '"></button>';
+    });
+    return '<div class="hero-slider"><div class="hero-track" id="heroTrack">' +
+      slides.map(slide).join("") + "</div>" +
+      '<button class="hero-nav prev" type="button" id="heroPrev">‹</button>' +
+      '<button class="hero-nav next" type="button" id="heroNext">›</button>' +
+      '<div class="hero-dots">' + dots + "</div></div>";
+  }
+
+  function initHero() {
+    var track = document.getElementById("heroTrack");
+    if (!track || track.children.length < 2) return;
+    var slides = track.children.length, idx = 0;
+    var dots = track.parentElement.querySelectorAll(".hero-dot");
+    function go(i) {
+      idx = (i + slides) % slides;
+      track.style.transform = "translateX(-" + idx * 100 + "%)";
+      Array.prototype.forEach.call(dots, function (d, j) {
+        d.classList.toggle("on", j === idx);
+      });
+    }
+    function auto() {
+      clearInterval(heroTimer);
+      heroTimer = setInterval(function () {
+        if (!document.body.contains(track)) { clearInterval(heroTimer); return; }
+        go(idx + 1);
+      }, 4500);
+    }
+    var prev = document.getElementById("heroPrev");
+    var next = document.getElementById("heroNext");
+    if (prev) prev.onclick = function () { go(idx - 1); auto(); };
+    if (next) next.onclick = function () { go(idx + 1); auto(); };
+    Array.prototype.forEach.call(dots, function (d) {
+      d.onclick = function () { go(+d.dataset.i); auto(); };
+    });
+    var x0 = null;
+    track.addEventListener("touchstart", function (e) {
+      x0 = e.touches[0].clientX;
+    }, { passive: true });
+    track.addEventListener("touchend", function (e) {
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 40) { go(idx + (dx < 0 ? 1 : -1)); auto(); }
+      x0 = null;
+    }, { passive: true });
+    auto();
   }
 
   function renderList() {
@@ -163,9 +214,10 @@
       }
     }
     view.innerHTML = html;
+    initHero();
     view.onclick = function (e) {
       if (e.target.closest(".buy")) return; // Buy button -> Telegram, not detail
-      var card = e.target.closest(".card, .hero");
+      var card = e.target.closest(".card, .hero-slide");
       if (card && card.getAttribute("data-pid")) {
         location.hash = "#/p/" + card.getAttribute("data-pid");
       }
