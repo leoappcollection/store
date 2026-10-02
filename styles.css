@@ -1,7 +1,7 @@
 :root {
-  --bg: #101820;
-  --bg2: #16222e;
-  --card: #1b2836;
+  --bg: #0a141f;
+  --bg2: #101e2c;
+  --card: #152433;
   --line: #2b3c4f;
   --text: #eef4f9;
   --muted: #9db2c4;
@@ -42,7 +42,7 @@ a { color: inherit; text-decoration: none; }
   cursor: pointer; flex-shrink: 0;
 }
 .cattabs button.active {
-  background: var(--acc); border-color: var(--acc); color: var(--acc-ink);
+  background: var(--catc, var(--acc)); border-color: var(--catc, var(--acc)); color: var(--acc-ink);
   font-weight: 700;
 }
 .homebtn {
@@ -87,11 +87,36 @@ a { color: inherit; text-decoration: none; }
   border-radius: var(--radius); padding: 12px;
   display: flex; flex-direction: column; gap: 6px;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
   transition: transform .18s ease, box-shadow .18s ease;
 }
 .card:hover {
   transform: translateY(-4px) scale(1.015);
-  box-shadow: 0 14px 30px rgba(0,0,0,.22);
+  box-shadow: 0 16px 34px rgba(0,0,0,.38);
+}
+.catchip {
+  display: inline-block; padding: 1px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; color: #0a141f;
+  margin-right: 6px; vertical-align: 1px;
+}
+.hero {
+  display: flex; gap: 14px; cursor: pointer;
+  background: linear-gradient(135deg, #0a3791 0%, #0f5cb0 100%);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px; margin-bottom: 14px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.3);
+}
+.hero-img {
+  width: 104px; height: 104px; flex: 0 0 104px;
+  object-fit: contain; border-radius: 10px; background: rgba(0,0,0,.25);
+}
+.hero-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.hero-tag { color: #ffd84d; font-size: 12px; font-weight: 700; letter-spacing: .4px; }
+.hero h2 { margin: 0; font-size: 17px; line-height: 1.35; }
+.hero-d {
+  color: #cfdae6; font-size: 13px; line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .card:active { transform: translateY(-1px) scale(1); }
 .chev {
@@ -183,5 +208,8 @@ a { color: inherit; text-decoration: none; }
   .searchbar { max-width: 640px; }
   .detail { max-width: 860px; margin: 0 auto; padding: 24px; }
   .card { padding: 16px; }
+  .hero { padding: 20px; gap: 20px; }
+  .hero-img { width: 160px; height: 160px; flex-basis: 160px; }
+  .hero h2 { font-size: 22px; }
   .foot { padding-bottom: 60px; }
 }
