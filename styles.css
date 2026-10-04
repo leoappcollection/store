@@ -53,11 +53,11 @@ a { color: inherit; text-decoration: none; }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand .mark {
   width: 38px; height: 38px; border-radius: 11px; flex: 0 0 38px;
-  background: linear-gradient(135deg, #8ae9f5, var(--acc) 55%, #0e7d90);
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
+  overflow: hidden;
   box-shadow: 0 2px 12px rgba(53,197,216,.35);
 }
+.brand .mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .brand .word { display: flex; flex-direction: column; line-height: 1.2; }
 .brand .word b {
   font-size: 19px; font-weight: 700; letter-spacing: .3px;
@@ -235,5 +235,3 @@ a { color: inherit; text-decoration: none; }
   .hero-nav { display: block; }
   .foot { padding-bottom: 60px; }
 }
-
-.dlc { color: #7ee2a8; font-weight: 600; white-space: nowrap; }
