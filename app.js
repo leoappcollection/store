@@ -106,20 +106,182 @@
     return '<span class="' + (cls || "thumb") + ' fallback">💿</span>';
   }
 
-
-  var DL = {};
-  function dlSeed(p) {
-    // stable display base from the product id (same on both stores),
-    // tiered by version newness / variant count, always under 100
-    var h = 0, s = String(p.id);
-    for (var i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
-    h = Math.abs(h);
-    if (p.latest) return 55 + (h % 40);
-    if ((p.pop || 0) >= 4) return 35 + (h % 25);
-    if ((p.pop || 0) >= 2) return 15 + (h % 20);
-    return 5 + (h % 12);
+  // --- Website cart -----------------------------------------------------
+  // Paid items collect in the browser, then checkout hands them to the
+  // bot in batches: Telegram's ?start= payload caps at 64 chars, and one
+  // product id packs into 8 base64url chars, so ~7 items ride per link.
+  // Free items skip the cart — their 🆓 button delivers them directly.
+  var CART_KEY = "leo_cart_v1", SENT_KEY = "leo_cart_sent_v1";
+  var BATCH_N = 7;
+  var cartJustSent = false;
+  function cartLoad(key, dflt) {
+    try { return JSON.parse(localStorage.getItem(key)) || dflt; }
+    catch (e) { return dflt; }
   }
-  function dlOf(p) { return dlSeed(p) + (DL[p.id] || 0); }
+  function cartSave(key, v) {
+    try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {}
+  }
+  function cartItems() { return cartLoad(CART_KEY, []); }
+  function cartSent() { return cartLoad(SENT_KEY, []); }
+  function cartPending() {
+    var sent = {};
+    cartSent().forEach(function (id) { sent[id] = 1; });
+    return cartItems().filter(function (it) { return !sent[it.id]; });
+  }
+  function cartTotal() {
+    return cartItems().reduce(function (a, it) { return a + (+it.price || 0); }, 0);
+  }
+  function updateCartBadge() {
+    var b = document.getElementById("cartBadge");
+    if (!b) return;
+    var n = cartItems().length;
+    b.textContent = n ? String(n) : "";
+    b.style.display = n ? "inline-flex" : "none";
+  }
+  function flashBtn(btn, txt) {
+    if (!btn) return;
+    var old = btn.textContent;
+    btn.textContent = txt;
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  }
+  window.addToCart = function (id, btn) {
+    var p = null;
+    for (var i = 0; i < DATA.products.length; i++) {
+      if (DATA.products[i].id === id) { p = DATA.products[i]; break; }
+    }
+    if (!p || p.free) return;
+    var items = cartItems();
+    for (var j = 0; j < items.length; j++) {
+      if (items[j].id === id) { flashBtn(btn, "✓ In cart"); return; }
+    }
+    items.push({ id: p.id, name: p.n, price: +(p.p || PRICE_USD),
+                 files: p.c, cover: p.cover || "", size: p.s || 0 });
+    cartSave(CART_KEY, items);
+    updateCartBadge();
+    flashBtn(btn, "✓ Added");
+  };
+  window.cartRemove = function (id) {
+    cartSave(CART_KEY,
+             cartItems().filter(function (it) { return it.id !== id; }));
+    cartSave(SENT_KEY,
+             cartSent().filter(function (x) { return x !== id; }));
+    updateCartBadge();
+    renderCartPage();
+  };
+  window.cartClearAll = function () {
+    cartSave(CART_KEY, []);
+    cartSave(SENT_KEY, []);
+    updateCartBadge();
+    renderCartPage();
+  };
+  // a batch the buyer tapped but never finished in the bot can be
+  // re-sent: unlock those items so the checkout button comes back
+  window.cartUnlockSent = function () {
+    cartSave(SENT_KEY, []);
+    updateCartBadge();
+    renderCartPage();
+  };
+  function pidChunk(pid) {
+    var bytes = pid.match(/.{2}/g).map(function (h) {
+      return parseInt(h, 16);
+    });
+    var bin = "";
+    for (var i = 0; i < bytes.length; i++) {
+      bin += String.fromCharCode(bytes[i]);
+    }
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_")
+      .replace(/=+$/, "");
+  }
+  function cartBatchURL(batch, total) {
+    var blob = batch.map(function (it) { return pidChunk(it.id); }).join("");
+    return "https://t.me/" + BOT_USERNAME + "?start=w" + total + "-" + blob;
+  }
+  window.cartCheckoutSent = function () {
+    // mark the batch on the clicked link as handed to the bot; when that
+    // was the last batch, the site cart has done its job (the bot keeps
+    // the real cart), so clear it — the returning buyer starts fresh.
+    var sent = cartSent();
+    cartPending().slice(0, BATCH_N).forEach(function (it) {
+      if (sent.indexOf(it.id) === -1) sent.push(it.id);
+    });
+    cartSave(SENT_KEY, sent);
+    if (!cartPending().length) {
+      cartSave(CART_KEY, []);
+      cartSave(SENT_KEY, []);
+      cartJustSent = true;
+    }
+    setTimeout(renderCartPage, 500);
+  };
+
+  function renderCartPage() {
+    var items = cartItems(), pending = cartPending();
+    updateCartBadge();
+    var html = '<a class="back" href="#/">← Back</a>' +
+      '<h2 class="section-title">🧺 Cart</h2>';
+    if (!items.length) {
+      if (cartJustSent) {
+        cartJustSent = false;
+        html += '<div class="dbox">✅ Your items were sent to the Telegram ' +
+          "bot — this cart is cleared. Pay in the bot to get your " +
+          "files.</div>" +
+          '<a class="checkoutbtn" href="https://t.me/' + BOT_USERNAME +
+          '" target="_blank" rel="noopener">Open the Telegram bot</a>';
+      } else {
+        html += '<div class="empty">Your cart is empty.<br>Pick a ' +
+          "software and tap ＋ Cart.</div>";
+      }
+    } else {
+      var sentMap = {};
+      cartSent().forEach(function (id) { sentMap[id] = 1; });
+      html += '<div class="res-list">' + items.map(function (it) {
+        var tail = sentMap[it.id]
+          ? '<span class="sent-tag">✅ Sent to bot</span>'
+          : '<div class="rprice">$' + (+it.price || 0) + "</div>" +
+            '<button class="rmbtn" onclick="window.cartRemove(\'' +
+            it.id + '\')" aria-label="Remove">✕</button>';
+        var thumb = it.cover
+          ? '<img class="rthumb cover" src="' + esc(it.cover) + '" alt="" ' +
+            'loading="lazy" onerror="this.outerHTML=\'<span ' +
+            'class=&quot;rthumb fallback&quot;>💿</span>\'">'
+          : '<span class="rthumb fallback">💿</span>';
+        return '<div class="res-item">' + thumb +
+          '<div class="rbody"><div class="rname">' + esc(it.name) +
+          '</div><div class="rmeta">' + (it.files || 0) + " files · " +
+          esc(fmtSize(it.size)) + "</div></div>" + tail + "</div>";
+      }).join("") + "</div>";
+      html += '<div class="carttotal">Total: <b>$' + cartTotal() +
+        "</b> (" + items.length + " item" +
+        (items.length === 1 ? "" : "s") + ")</div>";
+      if (pending.length) {
+        var batch = pending.slice(0, BATCH_N);
+        var label = pending.length > batch.length
+          ? "Checkout in Telegram (first " + batch.length + " items)"
+          : "Checkout in Telegram";
+        html += '<a class="checkoutbtn" href="' +
+          cartBatchURL(batch, items.length) +
+          '" target="_blank" rel="noopener" ' +
+          'onclick="window.cartCheckoutSent()">' + label + "</a>";
+        if (pending.length > batch.length) {
+          html += '<div class="buy-note">Large cart — items are sent in ' +
+            "batches. After opening the bot, come back here and tap " +
+            "Checkout again for the next batch.</div>";
+        }
+        html += '<button class="clearbtn" onclick="window.cartClearAll()">' +
+          "🧺 Clear the whole cart</button>";
+      } else {
+        html += '<div class="dbox">✅ Everything has been sent to the ' +
+          "Telegram bot. Pay there to get your files.</div>" +
+          '<a class="checkoutbtn" href="https://t.me/' + BOT_USERNAME +
+          '" target="_blank" rel="noopener">Open the Telegram bot</a>' +
+          '<button class="clearbtn" onclick="window.cartUnlockSent()">' +
+          "↩️ Item didn't arrive? Resend to the bot</button>" +
+          '<button class="clearbtn" onclick="window.cartClearAll()">' +
+          "🧺 Clear the whole cart</button>";
+      }
+    }
+    view.innerHTML = html;
+    window.scrollTo(0, 0);
+  }
 
   function cardHtml(p) {
     var linkUrl = "https://t.me/" + BOT_USERNAME + "?start=" +
@@ -127,18 +289,24 @@
     var btn = p.free
       ? '<a class="buy free" href="' + linkUrl + '" target="_blank" rel="noopener">🆓 Get it free</a>'
       : '<a class="buy" href="' + linkUrl + '" target="_blank" rel="noopener">Buy 🛒</a>';
+    var addBtn = p.free ? "" :
+      '<button class="cadd" type="button" onclick="window.addToCart(\'' +
+      p.id + '\',this)">＋ Cart</button>';
     var teaser = p.d ? '<div class="teaser">' + esc(p.d) + "</div>" : "";
     var ck = p.free ? "free" : catOf(p.n);
     var chip = '<span class="catchip" style="background:' + CAT_COLORS[ck] + '">' +
       esc(catLabel(ck)) + "</span>";
+    var dl = DL[p.id];
+    var dlnote = typeof dl === "number"
+      ? ' <span class="dlc">⬇ ' + dl + " downloads</span>" : "";
     return '<div class="card" data-pid="' + p.id + '">' +
       '<div class="chead">' + thumbHtml(p) +
       "<h3>" + esc(p.n) + '</h3><span class="chev">›</span></div>' +
       teaser +
       '<div class="cmeta">' + chip + p.c + " files · " + esc(fmtSize(p.s)) +
-      ' <span class="dlc">⬇ ' + dlOf(p) + " downloads</span></div>" +
+      dlnote + "</div>" +
       '<div class="crow"><span class="price">' + fmtPrice(p) + "</span>" +
-      btn + "</div>" +
+      '<span class="cactions">' + addBtn + btn + "</span></div>" +
       "</div>";
   }
 
@@ -159,7 +327,10 @@
         '<img class="hero-img" src="' + esc(p.cover) + '" alt="" loading="lazy">' +
         '<div class="hero-body"><div class="hero-tag">⭐ Featured</div>' +
         "<h2>" + esc(p.n) + "</h2>" + teaser +
-        '<div class="crow"><span class="price">' + fmtPrice(p) + "</span>" + btn + "</div>" +
+        '<div class="crow"><span class="price">' + fmtPrice(p) + "</span>" +
+        '<span class="cactions">' +
+        (p.free ? "" : '<button class="cadd" type="button" onclick="event.stopPropagation();window.addToCart(\'' +
+          p.id + '\',this)">＋ Cart</button>') + btn + "</span></div>" +
         "</div></div>";
     }
     var dots = "";
@@ -266,7 +437,6 @@
         if (DATA) {
           for (var i = 0; i < DATA.products.length; i++) {
             if (DATA.products[i].id === pid) {
-              d._prod = DATA.products[i];
               icon = thumbHtml(DATA.products[i], "thumb big");
               break;
             }
@@ -284,8 +454,7 @@
           '<div class="detail"><div class="chead">' + icon +
           "<h2>" + esc(d.name) + "</h2></div>" +
           '<div class="dbox">' + d.count + " files · total <b>" +
-          esc(fmtSize(d.size)) + '</b> · <span class="dlc">⬇ ' +
-          dlOf(d._prod || d) + " downloads</span></div>" +
+          esc(fmtSize(d.size)) + "</b></div>" +
           '<button class="ftoggle" type="button" onclick="toggleFiles(this)">📁 Show files</button>' +
           '<ul class="flist" style="display:none">' + rows + "</ul>" +
           vers +
@@ -295,9 +464,14 @@
               '" target="_blank" rel="noopener">🆓 Download free</a></div>'
             : '<div class="buyrow"><span class="price" style="font-size:18px">$' +
               (d.price || PRICE_USD) + "</span>" +
+              '<span class="cactions">' +
+              '<button class="cadd big2" type="button" onclick="window.addToCart(\'' +
+              d.id + '\',this)">＋ Cart</button>' +
               '<a class="buy big" href="' + esc(d.buy_url) +
-              '" target="_blank" rel="noopener">Buy 🛒</a></div>') +
+              '" target="_blank" rel="noopener">Buy 🛒</a></span></div>') +
           '<div class="note">Tapping Buy opens our Telegram bot. ' +
+          "Or collect items with ＋ Cart and check out once from the 🧺 " +
+          "Cart button above. " +
           "We accept crypto payments only — pay with USDT, USDC, USDe, USD1, BNB, ETH, XRP, TON, BTC or TRX " +
           "and receive your files right in the chat.</div></div>";
         window.scrollTo(0, 0);
@@ -308,14 +482,46 @@
       });
   }
 
+  // --- downloads data (seed + brokered real counts) --------------------
+  var DL = {};
+  function applyDownloads(d) {
+    DL = {};
+    var pl = (DATA && DATA.products) || [];
+    var byId = {};
+    pl.forEach(function (p) { byId[p.id] = p; });
+    // seed: deterministic base per product (kept under 100), same
+    // algorithm as the Myanmar software store.
+    pl.forEach(function (p) {
+      var seed = 0;
+      if (p.latest) seed = 55 + (pidSeed(p.id) % 40);
+      else if (p.pop >= 4) seed = 35 + (pidSeed(p.id) % 25);
+      else if (p.pop >= 2) seed = 15 + (pidSeed(p.id) % 20);
+      else seed = 5 + (pidSeed(p.id) % 12);
+      DL[p.id] = seed;
+    });
+    Object.keys(d || {}).forEach(function (pid) {
+      DL[pid] = (DL[pid] || 0) + (+d[pid] || 0);
+    });
+    var h = (location.hash || "#/").slice(1);
+    if ((h === "" || h === "/") && state.cat === "all" && !state.q.trim()) {
+      renderList();
+    }
+  }
+
   function route() {
     var h = location.hash || "#/";
+    if (h === "#/cart") { renderCartPage(); return; }
     var m = h.match(/^#\/p\/([0-9a-f]+)$/);
     if (m) renderDetail(m[1]);
     else {
       if (!state.shown) state.shown = PAGE;
       renderList();
     }
+  }
+
+  function listHash() {
+    var h = (location.hash || "#/").slice(1);
+    return h === "" || h === "/";
   }
 
   document.getElementById("searchForm").addEventListener("submit", function (e) {
@@ -332,14 +538,13 @@
 
   fetch("data/products.json")
     .then(function (r) { return r.json(); })
-    .then(function (d) {
-      DATA = d;
-      return fetch("data/downloads.json")
-        .then(function (r) { return r.ok ? r.json() : {}; })
-        .catch(function () { return {}; });
-    })
-    .then(function (j) { DL = j || {}; route(); })
+    .then(function (d) { DATA = d; route(); })
     .catch(function () {
       view.innerHTML = '<div class="empty">Could not load data. Please try again shortly.</div>';
     });
+  updateCartBadge();
+  fetch("data/downloads.json")
+    .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    .then(applyDownloads)
+    .catch(function () { applyDownloads({}); });
 })();

@@ -220,6 +220,68 @@ a { color: inherit; text-decoration: none; }
 }
 .empty { text-align: center; color: var(--muted); padding: 40px 10px; }
 
+/* cart (English software store) */
+.topbtns { display: flex; gap: 8px; align-items: center; }
+.cartbtn {
+  position: relative; font-size: 20px; text-decoration: none;
+  background: #182431; border: 1px solid var(--line);
+  border-radius: 10px; padding: 6px 10px; line-height: 1;
+}
+.badge {
+  position: absolute; top: -6px; right: -6px;
+  min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 999px; background: var(--acc); color: var(--acc-ink);
+  font-size: 11px; font-weight: 800;
+  align-items: center; justify-content: center;
+}
+.cactions { display: inline-flex; gap: 8px; align-items: center; }
+.cadd {
+  background: #22334a; color: var(--text); border: 1px solid var(--line);
+  border-radius: 10px; padding: 8px 12px; font-size: 14px; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+}
+.cadd:active { background: #2c415e; }
+.cadd.big2 { font-size: 15px; padding: 11px 16px; }
+.dlc { color: var(--muted); font-size: 12px; }
+.section-title { font-size: 19px; margin: 4px 0 14px; }
+.res-list { display: flex; flex-direction: column; gap: 8px; }
+.res-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 10px;
+}
+.rthumb {
+  width: 42px; height: 42px; border-radius: 9px; flex: 0 0 42px;
+  background: var(--bg2); object-fit: contain;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.rthumb.cover { object-fit: cover; background: #000; }
+.rbody { flex: 1; min-width: 0; }
+.rname {
+  font-size: 14px; font-weight: 600; line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.rmeta { color: var(--muted); font-size: 12px; }
+.rprice { font-weight: 700; color: var(--acc); }
+.rmbtn {
+  background: none; border: 1px solid var(--line); color: var(--muted);
+  width: 28px; height: 28px; border-radius: 8px; cursor: pointer; font-size: 13px;
+}
+.carttotal { margin: 14px 2px 4px; font-size: 16px; }
+.carttotal b { color: var(--acc); }
+.checkoutbtn {
+  display: block; text-align: center; margin-top: 14px;
+  background: var(--acc); color: var(--acc-ink);
+  border-radius: 12px; padding: 13px; font-weight: 800; font-size: 17px;
+}
+.clearbtn {
+  display: block; width: 100%; margin-top: 10px;
+  background: none; border: 1px solid var(--line); color: var(--muted);
+  border-radius: 10px; padding: 10px; font-size: 14px; cursor: pointer;
+}
+.sent-tag { color: #4dd08a; font-size: 13px; font-weight: 700; }
+
 /* Desktop layout (>=900px). Mobile view above is untouched;
    delete this block to revert to the mobile-only design. */
 @media (min-width: 900px) {
