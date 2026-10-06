@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101820">
+<link rel="icon" type="image/png" href="leo-lion.png">
+<title>Leo App Collection</title>
+<link rel="stylesheet" href="styles.css?v=5">
+</head>
+<body>
+<header class="topbar">
+  <div class="toprow">
+    <a class="brand" href="#/">
+      <span class="mark"><img src="leo-lion.png" alt="Leo App Collection logo"></span>
+      <span class="word"><b>Leo App Collection</b><small>Pay with crypto</small></span>
+    </a>
+    <div class="topbtns">
+      <a class="homebtn" href="#/" aria-label="Home">🏠</a>
+      <a class="cartbtn" href="#/cart" aria-label="Cart">🧺<span class="badge" id="cartBadge" style="display:none"></span></a>
+    </div>
+  </div>
+  <nav class="cattabs" id="catTabs"></nav>
+  <form id="searchForm" class="searchbar" role="search" autocomplete="off">
+    <input id="q" type="search" placeholder="Search software… (e.g. Photoshop, Office, IDM)" aria-label="Search software">
+    <button type="submit" aria-label="Search">🔍</button>
+  </form>
+</header>
+<main id="view"></main>
+<footer class="foot">
+  All purchases are completed securely via our Telegram bot 📩
+</footer>
+<script src="config.js"></script>
+<script src="app.js?v=5"></script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "3574eb0b77f14dbc927e565c63cb1e87"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
