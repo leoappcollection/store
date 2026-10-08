@@ -483,24 +483,27 @@
   }
 
   // --- downloads data (seed + brokered real counts) --------------------
-  var DL = {};
+  var DL = {}, DLREAL = {};
+  function pidSeed(pid) {
+    // deterministic hash of the product id (djb2); stable across visits
+    var h = 0, s = String(pid);
+    for (var i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
   function applyDownloads(d) {
+    DLREAL = d || {};
     DL = {};
     var pl = (DATA && DATA.products) || [];
-    var byId = {};
-    pl.forEach(function (p) { byId[p.id] = p; });
-    // seed: deterministic base per product (kept under 100), same
-    // algorithm as the Myanmar software store.
+    // seed: deterministic base per product, always under 50 (his call
+    // 2026-10-08: under-100 looked unconvincing). Real downloads add on top,
+    // so the count keeps growing from the seed.
     pl.forEach(function (p) {
       var seed = 0;
-      if (p.latest) seed = 55 + (pidSeed(p.id) % 40);
-      else if (p.pop >= 4) seed = 35 + (pidSeed(p.id) % 25);
-      else if (p.pop >= 2) seed = 15 + (pidSeed(p.id) % 20);
-      else seed = 5 + (pidSeed(p.id) % 12);
-      DL[p.id] = seed;
-    });
-    Object.keys(d || {}).forEach(function (pid) {
-      DL[pid] = (DL[pid] || 0) + (+d[pid] || 0);
+      if (p.latest) seed = 30 + (pidSeed(p.id) % 18);
+      else if (p.pop >= 4) seed = 20 + (pidSeed(p.id) % 15);
+      else if (p.pop >= 2) seed = 10 + (pidSeed(p.id) % 12);
+      else seed = 3 + (pidSeed(p.id) % 8);
+      DL[p.id] = seed + (DLREAL[p.id] || 0);
     });
     var h = (location.hash || "#/").slice(1);
     if ((h === "" || h === "/") && state.cat === "all" && !state.q.trim()) {
@@ -538,7 +541,7 @@
 
   fetch("data/products.json")
     .then(function (r) { return r.json(); })
-    .then(function (d) { DATA = d; route(); })
+    .then(function (d) { DATA = d; applyDownloads(DLREAL); route(); })
     .catch(function () {
       view.innerHTML = '<div class="empty">Could not load data. Please try again shortly.</div>';
     });
